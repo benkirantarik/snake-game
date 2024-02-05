@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-top: 30px;
+        }
+        
+        #game-board {
+            width: 400px;
+            height: 400px;
+            border: 1px solid #333;
+            margin: 30px auto;
+            position: relative;
+        }
+        
+        .cell {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border: 1px solid #333;
+            box-sizing: border-box;
+        }
+        
+        .food {
+            background-color: #ff5050;
+        }
+        
+        .snake-head {
+            background-color: #333;
+        }
+        
+        .snake-body {
+            background-color: #666;
+        }
+        
+        #score {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <div id="score">Score: <span id="score-value">0</span></div>
+    <div id="game-board"></div>
+    <script>
+        // Game board dimensions
+        const boardSize = 20;
+        
+        // Initial snake position
+        const initialSnake = [
+            { x: 10, y: 10 },
+            { x: 9, y: 10 },
+            { x: 8, y: 10 }
+        ];
+        
+        // Initial snake direction
+        let currentDirection = "right";
+        
+        // Current food position
+        let foodPosition = { x: 15, y: 10 };
+        
+        // Snake movement interval
+        let intervalId;
+        
+        // Current score
+        let score = 0;
+        
+        function createGameBoard() {
+            const gameBoard = document.getElementById("game-board");
+        
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.style.top = row * 20 + "px";
+                    cell.style.left = col * 20 + "px";
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+        
+        function updateSnake() {
+            const gameBoard = document.getElementById("game-board");
+            const snakeHead = { x: initialSnake[0].x, y: initialSnake[0].y };
+        
+            switch (currentDirection) {
+                case "up":
+                    snakeHead.y -= 1;
+                    break;
+                case "down":
+                    snakeHead.y += 1;
+                    break;
+                case "left":
+                    snakeHead.x -= 1;
+                    break;
+                case "right":
+                    snakeHead.x += 1;
+                    break;
+            }
+        
+            initialSnake.unshift(snakeHead);
+        
+            if (snakeHead.x === foodPosition.x && snakeHead.y === foodPosition.y) {
+                generateFood();
+                score += 10;
+                document.getElementById("score-value").textContent = score;
+            } else {
+                initialSnake.pop();
+            }
+        
+            if (
+                snakeHead.x < 0 ||
+                snakeHead.x >= boardSize ||
+                snakeHead.y < 0 ||
+                snakeHead.y >= boardSize ||
+                hasSnakeCollision()
+            ) {
+                clearInterval(intervalId);
+                gameOver();
+            }
+        
+            drawSnake(gameBoard);
+        }
+        
+        function drawSnake(gameBoard) {
+            gameBoard.innerHTML = "";
+        
+            initialSnake.forEach((segment, index) => {
+                const snakeElement = document.createElement("div");
+                snakeElement.style.top = segment.y * 20 + "px";
+                snakeElement.style.left = segment.x * 20 + "px";
+                snakeElement.classList.add("cell");
+                if (index === 0) {
+                    snakeElement.classList.add("snake-head");
+                } else {
+                    snakeElement.classList.add("snake-body");
+                }
+                gameBoard.appendChild(snakeElement);
+            });
+        
+            const foodElement = document.createElement("div");
+            foodElement.style.top = foodPosition.y * 20 + "px";
+            foodElement.style.left = foodPosition.x * 20 + "px";
+            foodElement.classList.add("cell", "food");
+            gameBoard.appendChild(foodElement);
+        }
+        
+        function hasSnakeCollision() {
+            const snakeHead = initialSnake[0];
+            for (let i = 1; i < initialSnake.length; i++) {
+                if (initialSnake[i].x === snakeHead.x && initialSnake[i].y === snakeHead.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function generateFood() {
+            foodPosition = {
+                x: Math.floor(Math.random() * boardSize),
+                y: Math.floor(Math.random() * boardSize)
+            };
+        }
+        
+        function handleKeyPress(event) {
+            const key = event.key;
+            if (
+                (key === "ArrowUp" || key === "w") &&
+                currentDirection !== "down"
+            ) {
+                currentDirection = "up";
+            } else if (
+                (key === "ArrowDown" || key === "s") &&
+                currentDirection !== "up"
+            ) {
+                currentDirection = "down";
+            } else if (
+                (key === "ArrowLeft" || key === "a") &&
+                currentDirection !== "right"
+            ) {
+                currentDirection = "left";
+            } else if (
+                (key === "ArrowRight" || key === "d") &&
+                currentDirection !== "left"
+            ) {
+                currentDirection = "right";
+            }
+        }
+        
+        function startGame() {
+            createGameBoard();
+            generateFood();
+            drawSnake(document.getElementById("game-board"));
+            intervalId = setInterval(updateSnake, 150);
+            document.addEventListener("keydown", handleKeyPress);
+        }
+        
+        function gameOver() {
+            const gameBoard = document.getElementById("game-board");
+            gameBoard.innerHTML = '<h2>Game Over!</h2><p>Your score: ' + score + '</p><button onclick="location.reload()">Play Again</button>';
+        }
+        
+        startGame();
+    </script>
+</body>
+</html>
